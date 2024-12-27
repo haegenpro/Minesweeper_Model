@@ -54,15 +54,8 @@ class MinesweeperGame:
     def display_visible_grid(self):
         for row in self.visible_grid:
             print(" ".join(cell if cell != ' ' else self.UNOPENED_CELL for cell in row))
-
+        print()
+    
     def simulate_solver(self):
         print("Simulating game solution...")
 
-# Example Usage
-game = MinesweeperGame(16, 30, 99)
-game.grid.display_board()
-game.display_visible_grid()
-game.reveal_cell(0, 0)
-game.flag_cell(1, 1)
-print()
-game.display_visible_grid()
