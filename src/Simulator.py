@@ -17,7 +17,9 @@ def main():
         "Intermediate": (16, 16, 40),
         "Expert": (16, 30, 99)
     }
-    iterations = 100
+    print("Minesweeper Simulator\n")
+    print("Choose your number of iterations:")
+    iterations = int(input())
     print("Simulating Minesweeper Win Rates...\n")
     for difficulty, (rows, cols, mines) in difficulties.items():
         print(f"Simulating {difficulty} Level ({iterations} games)")

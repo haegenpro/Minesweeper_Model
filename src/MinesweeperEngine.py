@@ -204,8 +204,8 @@ class MinesweeperEngine:
         print(f"Test results saved to {file_path}")
 
 if __name__ == "__main__":
-    engine = MinesweeperEngine(9, 9, 10)
+    engine = MinesweeperEngine(16, 30, 99)
     engine.solve()
     # Save the results if the game finishes successfully
     if engine.game.win or engine.game.game_over:
-        engine.save_test_results("Minesweeper_Model/test/test_results_1.txt")
+        engine.save_test_results("Minesweeper_Model/test/test_results_3.txt")
