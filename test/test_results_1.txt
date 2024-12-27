@@ -1,0 +1,25 @@
+Minesweeper Engine Test Results
+===============================
+Grid Size: 8x8
+Number of Mines: 10
+Game Outcome: Win
+
+Final Game State:
+0 1 F 1 0 1 F 2
+0 1 1 1 0 1 2 F
+2 2 2 1 1 0 1 1
+F F 2 F 1 0 0 0
+3 3 3 2 2 1 0 0
+1 F 2 2 F 1 0 0
+1 1 2 F 3 2 1 0
+0 0 1 1 2 F 1 0
+
+Solution Grid:
+0 1 M 1 0 1 M 2
+0 1 1 1 0 1 2 M
+2 2 2 1 1 0 1 1
+M M 2 M 1 0 0 0
+3 3 3 2 2 1 0 0
+1 M 2 2 M 1 0 0
+1 1 2 M 3 2 1 0
+0 0 1 1 2 M 1 0

@@ -1,4 +1,5 @@
 from MinesweeperGame import MinesweeperGame
+import random
 
 class MinesweeperEngine:
     def __init__(self, rows, cols, mine_count):
@@ -47,18 +48,20 @@ class MinesweeperEngine:
                     number = int(self.game.visible_grid[x][y])
                     neighbors = self.get_neighbors(x, y)
                     unrevealed = [n for n in neighbors if self.game.visible_grid[n[0]][n[1]] == '*']
+                    flagged = [n for n in neighbors if self.game.visible_grid[n[0]][n[1]] == 'F']
 
-                    if len(unrevealed) == number:
+                    if len(unrevealed) > 0 and len(unrevealed) + len(flagged) == number:
                         self.flag_cells(unrevealed)
                         move_made = True
                         processed.add((x, y))  # Mark cell as processed
 
         # Step 3: Apply patterns if no move has been made
         if not move_made:
-            move_made = self.apply_patterns()
+            move_made = self.apply_patterns(processed)
 
         # Step 4: Probability-based guess as a last resort
         if not move_made:
+            print("Making a probability-based guess.")
             self.probability_guess()
             move_made = True
 
@@ -80,117 +83,130 @@ class MinesweeperEngine:
                     neighbors.append((nx, ny))
         return neighbors
     
-    def apply_patterns(self):
+    def apply_patterns(self, processed):
         move_made = False
+
         for x in range(self.game.rows):
             for y in range(self.game.cols):
+                if (x, y) in processed:  # Skip cells already processed
+                    continue
                 if self.game.visible_grid[x][y].isdigit():
-                    if move_made:  # Stop further checks once a move is made
+                    # Detect patterns, skip further checks if a move is made
+                    if self.detect_1_1(x, y, processed):
+                        move_made = True
+                        print(f"1-1 pattern detected at ({x}, {y}).")
                         break
-                    if self.detect_1_1(x, y):
+                    if self.detect_2_1(x, y, processed):
                         move_made = True
-                    if self.detect_1_2(x, y):
-                        move_made = True
-                    if self.detect_holes_and_triangles(x, y):
-                        move_made = True
+                        print(f"2-1 pattern detected at ({x}, {y}).")
+                        break
         return move_made
 
     def probability_guess(self):
-        # Placeholder for probability-based guessing logic
-        for x in range(self.game.rows):
-            for y in range(self.game.cols):
-                if self.game.visible_grid[x][y] == '*':
-                    self.game.reveal_cell(x, y)
-                    return
-    
-    def detect_1_1(self, x, y):
+        """Make a random guess among unrevealed cells."""
+        unrevealed_cells = [(x, y) for x in range(self.game.rows) for y in range(self.game.cols) if self.game.visible_grid[x][y] == '*']
+        if unrevealed_cells:
+            x, y = random.choice(unrevealed_cells)
+            self.game.reveal_cell(x, y)
+            return True
+
+    def detect_1_1(self, x, y, processed):
         number = int(self.game.visible_grid[x][y])
         neighbors = self.get_neighbors(x, y)
         unrevealed = [n for n in neighbors if self.game.visible_grid[n[0]][n[1]] == '*']
         flagged = [n for n in neighbors if self.game.visible_grid[n[0]][n[1]] == 'F']
 
-        if number - len(flagged) == 1:  # Check if current number can form part of 1-1 pattern
-            for nx, ny in neighbors:
-                if self.game.visible_grid[nx][ny].isdigit():
-                    adjacent_number = int(self.game.visible_grid[nx][ny])
-                    adjacent_neighbors = self.get_neighbors(nx, ny)
-                    unique_unrevealed = [n for n in adjacent_neighbors if n not in unrevealed]
-                    shared_unrevealed = [n for n in unrevealed if n in adjacent_neighbors]
-                    adjacent_flagged = [n for n in adjacent_neighbors if self.game.visible_grid[n[0]][n[1]] == 'F']
-                    
-                    if (adjacent_number - len(adjacent_flagged)) == 1 and len(shared_unrevealed) == 1:
-                        # Open the unique unrevealed cells adjacent only to the second number
-                        for sx, sy in unique_unrevealed:
-                            self.game.reveal_cell(sx, sy)
-                        return True
-        return False
-
-    def detect_1_2(self, x, y):
-        number = int(self.game.visible_grid[x][y])
-        neighbors = self.get_neighbors(x, y)
-        unrevealed = [n for n in neighbors if self.game.visible_grid[n[0]][n[1]] == '*']
-        flagged = [n for n in neighbors if self.game.visible_grid[n[0]][n[1]] == 'F']
-
-        if number - len(flagged) == 1:  # Check if current number can form part of 1-2 pattern
-            for nx, ny in neighbors:
-                if self.game.visible_grid[nx][ny].isdigit():
-                    adjacent_number = int(self.game.visible_grid[nx][ny])
-                    adjacent_neighbors = self.get_neighbors(nx, ny)
-                    shared_unrevealed = [n for n in unrevealed if n in adjacent_neighbors]
-                    adjacent_flagged = [n for n in adjacent_neighbors if self.game.visible_grid[n[0]][n[1]] == 'F']
-                    
-                    if (adjacent_number - len(adjacent_flagged)) == 2 and len(shared_unrevealed) == 1:
-                        # Apply reduction logic and reveal safe cells
-                        safe_cells = [n for n in unrevealed if n not in shared_unrevealed]
-                        for sx, sy in safe_cells:
-                            self.game.reveal_cell(sx, sy)
-                        # Flag mines in shared cells
-                        for fx, fy in shared_unrevealed:
-                            self.game.flag_cell(fx, fy)
-                        return True
-        return False
-
-    def detect_holes_and_triangles(self, x, y):
-        number = int(self.game.visible_grid[x][y])
-        neighbors = self.get_neighbors(x, y)
-        unrevealed = [n for n in neighbors if self.game.visible_grid[n[0]][n[1]] == '*']
-        flagged = [n for n in neighbors if self.game.visible_grid[n[0]][n[1]] == 'F']
+        # Skip cells with no unrevealed neighbors
+        if not unrevealed:
+            return False
 
         for nx, ny in neighbors:
             if self.game.visible_grid[nx][ny].isdigit():
                 adjacent_number = int(self.game.visible_grid[nx][ny])
                 adjacent_neighbors = self.get_neighbors(nx, ny)
-                adjacent_unrevealed = [n for n in adjacent_neighbors if self.game.visible_grid[n[0]][n[1]] == '*']
+
+                # Compute shared and unique cells
+                shared_unrevealed = [n for n in unrevealed if n in adjacent_neighbors]
+                for sx, sy in shared_unrevealed:
+                    print(f"Shared unrevealed cell at ({sx}, {sy})")
+                unique_unrevealed = [n for n in adjacent_neighbors if n not in shared_unrevealed]
+                for ux, uy in unique_unrevealed:
+                    print(f"Unique unrevealed cell at ({ux}, {uy})")
                 adjacent_flagged = [n for n in adjacent_neighbors if self.game.visible_grid[n[0]][n[1]] == 'F']
 
-                shared_unrevealed = [n for n in unrevealed if n in adjacent_unrevealed]
-                unique_to_current = [n for n in unrevealed if n not in shared_unrevealed]
-                unique_to_adjacent = [n for n in adjacent_unrevealed if n not in shared_unrevealed]
+                # Skip if no actionable unique cells or all neighbors are processed
+                if not shared_unrevealed or (x, y) in processed or (nx, ny) in processed:
+                    continue
 
-                # Analyze based on the difference in numbers
-                diff = number - len(flagged)
-                adj_diff = adjacent_number - len(adjacent_flagged)
+                # Ensure the pattern logic is valid
+                if len(shared_unrevealed) == len(unrevealed) and adjacent_number - len(adjacent_flagged) == 1:
+                    if not unique_unrevealed:
+                        processed.add((x, y))
+                        processed.add((nx, ny))
+                        return False
 
-                # Flag unique cells if conditions are met
-                if diff == len(unique_to_current):
-                    for ux, uy in unique_to_current:
-                        self.game.flag_cell(ux, uy)
-                if adj_diff == len(unique_to_adjacent):
-                    for ux, uy in unique_to_adjacent:
-                        self.game.flag_cell(ux, uy)
-
-                # Reveal shared cells if no mines remain to be flagged
-                if diff + adj_diff == len(shared_unrevealed):
-                    for sx, sy in shared_unrevealed:
-                        self.game.reveal_cell(sx, sy)
-
-                return True  # A move was made
+                    # Reveal unique cells
+                    for ux, uy in unique_unrevealed:
+                        print(f"Revealing unique cell at ({ux}, {uy})")
+                        self.game.reveal_cell(ux, uy)
+                    processed.add((x, y))  # Mark as processed
+                    processed.add((nx, ny))
+                    return True
         return False
+
+
+    def detect_2_1(self, x, y, processed):
+        number = int(self.game.visible_grid[x][y])
+        neighbors = self.get_neighbors(x, y)
+        unrevealed = [n for n in neighbors if self.game.visible_grid[n[0]][n[1]] == '*']
+        flagged = [n for n in neighbors if self.game.visible_grid[n[0]][n[1]] == 'F']
+
+        # Skip cells with no unrevealed neighbors
+        if not unrevealed:
+            return False
+
+        if number - len(flagged) == 2:  # "2" clue logic
+            for nx, ny in neighbors:
+                if self.game.visible_grid[nx][ny].isdigit():
+                    adjacent_number = int(self.game.visible_grid[nx][ny])
+                    adjacent_neighbors = self.get_neighbors(nx, ny)
+                    shared_unrevealed = [n for n in unrevealed if n in adjacent_neighbors]
+                    unique_to_2 = [n for n in unrevealed if n not in shared_unrevealed]
+                    adjacent_flagged = [n for n in adjacent_neighbors if self.game.visible_grid[n[0]][n[1]] == 'F']
+
+                    # Ensure the adjacent "1" logic holds
+                    if adjacent_number - len(adjacent_flagged) == 1 and len(unique_to_2) == 1:
+                        # Flag the unique cell for the "2"
+                        for ux, uy in unique_to_2:
+                            self.game.flag_cell(ux, uy)
+                        processed.add((x, y))  # Mark as processed
+                        processed.add((nx, ny))
+                        return True
+        return False
+
     def flag_cells(self, cells):
         """Flag a list of cells as mines."""
         for x, y in cells:
             if self.game.visible_grid[x][y] != 'F':
                 self.game.flag_cell(x, y)
     
-engine = MinesweeperEngine(8, 8, 10)
+    def save_test_results(self, file_path):
+        with open(file_path, "w") as file:
+            file.write("Minesweeper Engine Test Results\n")
+            file.write("===============================\n")
+            file.write(f"Grid Size: {self.game.rows}x{self.game.cols}\n")
+            file.write(f"Number of Mines: {self.game.mine_count}\n")
+            file.write(f"Game Outcome: {'Win' if self.game.win else 'Loss'}\n")
+            file.write("\nFinal Game State:\n")
+            for row in self.game.visible_grid:
+                file.write(" ".join(row) + "\n")
+            file.write("\nSolution Grid:\n")
+            for row in self.game.grid.board:
+                file.write(" ".join(str(cell) if cell != -1 else "M" for cell in row) + "\n")
+        print(f"Test results saved to {file_path}")
+
+engine = MinesweeperEngine(16, 30, 99)
 engine.solve()
+# Save the results if the game finishes successfully
+if engine.game.win or engine.game.game_over:
+    engine.save_test_results("Minesweeper_Model/test/test_results_3.txt")
