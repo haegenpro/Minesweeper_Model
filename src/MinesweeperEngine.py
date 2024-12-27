@@ -117,29 +117,26 @@ class MinesweeperEngine:
         flagged = [n for n in neighbors if self.game.visible_grid[n[0]][n[1]] == 'F']
 
         # Skip cells with no unrevealed neighbors
-        if not unrevealed:
+        if not unrevealed or (x, y) in processed:
             return False
 
         for nx, ny in neighbors:
             if self.game.visible_grid[nx][ny].isdigit():
                 adjacent_number = int(self.game.visible_grid[nx][ny])
                 adjacent_neighbors = self.get_neighbors(nx, ny)
-
+                adjacent_unrevealed = [n for n in adjacent_neighbors if self.game.visible_grid[n[0]][n[1]] == '*']
                 # Compute shared and unique cells
-                shared_unrevealed = [n for n in unrevealed if n in adjacent_neighbors]
-                for sx, sy in shared_unrevealed:
-                    print(f"Shared unrevealed cell at ({sx}, {sy})")
-                unique_unrevealed = [n for n in adjacent_neighbors if n not in shared_unrevealed]
-                for ux, uy in unique_unrevealed:
-                    print(f"Unique unrevealed cell at ({ux}, {uy})")
+                shared_unrevealed = [n for n in unrevealed if n in adjacent_unrevealed]
+                unique_unrevealed = [n for n in adjacent_unrevealed if n not in unrevealed]
                 adjacent_flagged = [n for n in adjacent_neighbors if self.game.visible_grid[n[0]][n[1]] == 'F']
 
                 # Skip if no actionable unique cells or all neighbors are processed
-                if not shared_unrevealed or (x, y) in processed or (nx, ny) in processed:
+                if not shared_unrevealed or (nx, ny) in processed:
                     continue
 
                 # Ensure the pattern logic is valid
                 if len(shared_unrevealed) == len(unrevealed) and adjacent_number - len(adjacent_flagged) == 1:
+                    # If no unique cells, mark as processed and skip further checks
                     if not unique_unrevealed:
                         processed.add((x, y))
                         processed.add((nx, ny))
@@ -147,12 +144,12 @@ class MinesweeperEngine:
 
                     # Reveal unique cells
                     for ux, uy in unique_unrevealed:
-                        print(f"Revealing unique cell at ({ux}, {uy})")
                         self.game.reveal_cell(ux, uy)
                     processed.add((x, y))  # Mark as processed
                     processed.add((nx, ny))
                     return True
         return False
+
 
 
     def detect_2_1(self, x, y, processed):
@@ -170,7 +167,8 @@ class MinesweeperEngine:
                 if self.game.visible_grid[nx][ny].isdigit():
                     adjacent_number = int(self.game.visible_grid[nx][ny])
                     adjacent_neighbors = self.get_neighbors(nx, ny)
-                    shared_unrevealed = [n for n in unrevealed if n in adjacent_neighbors]
+                    adjacent_unrevealed = [n for n in adjacent_neighbors if self.game.visible_grid[n[0]][n[1]] == '*']
+                    shared_unrevealed = [n for n in unrevealed if n in adjacent_unrevealed]
                     unique_to_2 = [n for n in unrevealed if n not in shared_unrevealed]
                     adjacent_flagged = [n for n in adjacent_neighbors if self.game.visible_grid[n[0]][n[1]] == 'F']
 
@@ -205,8 +203,9 @@ class MinesweeperEngine:
                 file.write(" ".join(str(cell) if cell != -1 else "M" for cell in row) + "\n")
         print(f"Test results saved to {file_path}")
 
-engine = MinesweeperEngine(16, 30, 99)
-engine.solve()
-# Save the results if the game finishes successfully
-if engine.game.win or engine.game.game_over:
-    engine.save_test_results("Minesweeper_Model/test/test_results_3.txt")
+if __name__ == "__main__":
+    engine = MinesweeperEngine(9, 9, 10)
+    engine.solve()
+    # Save the results if the game finishes successfully
+    if engine.game.win or engine.game.game_over:
+        engine.save_test_results("Minesweeper_Model/test/test_results_1.txt")

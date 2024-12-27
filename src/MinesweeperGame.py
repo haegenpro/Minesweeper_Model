@@ -56,6 +56,3 @@ class MinesweeperGame:
             print(" ".join(cell if cell != ' ' else self.UNOPENED_CELL for cell in row))
         print()
     
-    def simulate_solver(self):
-        print("Simulating game solution...")
-
