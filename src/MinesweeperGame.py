@@ -1,7 +1,7 @@
 from MinesweeperGrid import MinesweeperGrid
 
 class MinesweeperGame:
-    UNOPENED_CELL = '*'  # Symbol for unopened cells
+    UNOPENED_CELL = '*'
 
     def __init__(self, rows, cols, mine_count):
         self.grid = MinesweeperGrid(rows, cols, mine_count)

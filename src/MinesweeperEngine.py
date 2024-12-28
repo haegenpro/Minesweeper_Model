@@ -20,12 +20,11 @@ class MinesweeperEngine:
 
     def simulate_solver(self):
         move_made = False
-        processed = set()  # Track cells that have been processed
+        processed = set()
 
-        # Step 1: Safe reveals
         for x in range(self.game.rows):
             for y in range(self.game.cols):
-                if (x, y) in processed:  # Skip already processed cells
+                if (x, y) in processed:
                     continue
                 if self.game.visible_grid[x][y].isdigit():
                     number = int(self.game.visible_grid[x][y])
@@ -37,12 +36,12 @@ class MinesweeperEngine:
                         for nx, ny in unrevealed:
                             self.game.reveal_cell(nx, ny)
                             move_made = True
-                        processed.add((x, y))  # Mark cell as processed
+                        processed.add((x, y))
 
         # Step 2: Flag mines
         for x in range(self.game.rows):
             for y in range(self.game.cols):
-                if (x, y) in processed:  # Skip already processed cells
+                if (x, y) in processed:
                     continue
                 if self.game.visible_grid[x][y].isdigit():
                     number = int(self.game.visible_grid[x][y])
@@ -88,10 +87,9 @@ class MinesweeperEngine:
 
         for x in range(self.game.rows):
             for y in range(self.game.cols):
-                if (x, y) in processed:  # Skip cells already processed
+                if (x, y) in processed:
                     continue
                 if self.game.visible_grid[x][y].isdigit():
-                    # Detect patterns, skip further checks if a move is made
                     if self.detect_1_1(x, y, processed):
                         move_made = True
                         print(f"1-1 pattern detected at ({x}, {y}).")
@@ -103,7 +101,6 @@ class MinesweeperEngine:
         return move_made
 
     def probability_guess(self):
-        """Make a random guess among unrevealed cells."""
         unrevealed_cells = [(x, y) for x in range(self.game.rows) for y in range(self.game.cols) if self.game.visible_grid[x][y] == '*']
         if unrevealed_cells:
             x, y = random.choice(unrevealed_cells)
@@ -116,7 +113,6 @@ class MinesweeperEngine:
         unrevealed = [n for n in neighbors if self.game.visible_grid[n[0]][n[1]] == '*']
         flagged = [n for n in neighbors if self.game.visible_grid[n[0]][n[1]] == 'F']
 
-        # Skip cells with no unrevealed neighbors
         if not unrevealed or (x, y) in processed:
             return False
 
@@ -125,32 +121,25 @@ class MinesweeperEngine:
                 adjacent_number = int(self.game.visible_grid[nx][ny])
                 adjacent_neighbors = self.get_neighbors(nx, ny)
                 adjacent_unrevealed = [n for n in adjacent_neighbors if self.game.visible_grid[n[0]][n[1]] == '*']
-                # Compute shared and unique cells
                 shared_unrevealed = [n for n in unrevealed if n in adjacent_unrevealed]
                 unique_unrevealed = [n for n in adjacent_unrevealed if n not in unrevealed]
                 adjacent_flagged = [n for n in adjacent_neighbors if self.game.visible_grid[n[0]][n[1]] == 'F']
 
-                # Skip if no actionable unique cells or all neighbors are processed
                 if not shared_unrevealed or (nx, ny) in processed:
                     continue
 
-                # Ensure the pattern logic is valid
                 if len(shared_unrevealed) == len(unrevealed) and adjacent_number - len(adjacent_flagged) == 1:
-                    # If no unique cells, mark as processed and skip further checks
                     if not unique_unrevealed:
                         processed.add((x, y))
                         processed.add((nx, ny))
                         return False
 
-                    # Reveal unique cells
                     for ux, uy in unique_unrevealed:
                         self.game.reveal_cell(ux, uy)
-                    processed.add((x, y))  # Mark as processed
+                    processed.add((x, y))
                     processed.add((nx, ny))
                     return True
         return False
-
-
 
     def detect_2_1(self, x, y, processed):
         number = int(self.game.visible_grid[x][y])
@@ -158,11 +147,10 @@ class MinesweeperEngine:
         unrevealed = [n for n in neighbors if self.game.visible_grid[n[0]][n[1]] == '*']
         flagged = [n for n in neighbors if self.game.visible_grid[n[0]][n[1]] == 'F']
 
-        # Skip cells with no unrevealed neighbors
         if not unrevealed:
             return False
 
-        if number - len(flagged) == 2:  # "2" clue logic
+        if number - len(flagged) == 2:
             for nx, ny in neighbors:
                 if self.game.visible_grid[nx][ny].isdigit():
                     adjacent_number = int(self.game.visible_grid[nx][ny])
@@ -172,18 +160,15 @@ class MinesweeperEngine:
                     unique_to_2 = [n for n in unrevealed if n not in shared_unrevealed]
                     adjacent_flagged = [n for n in adjacent_neighbors if self.game.visible_grid[n[0]][n[1]] == 'F']
 
-                    # Ensure the adjacent "1" logic holds
                     if adjacent_number - len(adjacent_flagged) == 1 and len(unique_to_2) == 1:
-                        # Flag the unique cell for the "2"
                         for ux, uy in unique_to_2:
                             self.game.flag_cell(ux, uy)
-                        processed.add((x, y))  # Mark as processed
+                        processed.add((x, y))
                         processed.add((nx, ny))
                         return True
         return False
 
     def flag_cells(self, cells):
-        """Flag a list of cells as mines."""
         for x, y in cells:
             if self.game.visible_grid[x][y] != 'F':
                 self.game.flag_cell(x, y)
@@ -204,8 +189,7 @@ class MinesweeperEngine:
         print(f"Test results saved to {file_path}")
 
 if __name__ == "__main__":
-    engine = MinesweeperEngine(16, 30, 99)
+    engine = MinesweeperEngine(30, 30, 150)
     engine.solve()
-    # Save the results if the game finishes successfully
     if engine.game.win or engine.game.game_over:
-        engine.save_test_results("Minesweeper_Model/test/test_results_3.txt")
+        engine.save_test_results("Minesweeper_Model/test/test_results_4.txt")
