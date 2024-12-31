@@ -20,7 +20,7 @@ class MinesweeperGame:
         if self.grid.board[x][y] == -1:
             self.game_over = True
             self.visible_grid[x][y] = 'M'
-            print("Game Over! You hit a mine.")
+            print("A mine was hit! Game over.")
             return
         self.revealed.add((x, y))
         self.visible_grid[x][y] = str(self.grid.board[x][y])
@@ -49,7 +49,6 @@ class MinesweeperGame:
         if len(self.revealed) == self.rows * self.cols - self.mine_count:
             self.win = True
             self.game_over = True
-            print("Congratulations! You solved the Minesweeper grid.")
 
     def display_visible_grid(self):
         for row in self.visible_grid:

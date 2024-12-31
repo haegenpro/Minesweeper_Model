@@ -6,7 +6,7 @@ class MinesweeperEngine:
         self.game = MinesweeperGame(rows, cols, mine_count)
     
     def solve(self):
-        print("Starting Minesweeper Solver...")
+        print(f"Solving Minesweeper game with {self.game.rows}x{self.game.cols} grid and {self.game.mine_count} mines.")
         while not self.game.game_over:
             move_made = self.simulate_solver()
             if not move_made:
@@ -64,7 +64,6 @@ class MinesweeperEngine:
             self.probability_guess()
             move_made = True
 
-        # Safeguard: If no progress is possible, stop processing
         if not move_made:
             print("No progress possible. Solver stopping.")
             self.game.game_over = True
@@ -189,7 +188,10 @@ class MinesweeperEngine:
         print(f"Test results saved to {file_path}")
 
 if __name__ == "__main__":
-    engine = MinesweeperEngine(30, 30, 150)
+    rows = int(input("Enter number of rows: "))
+    cols = int(input("Enter number of columns: "))
+    mines = int(input("Enter number of mines: "))
+    engine = MinesweeperEngine(rows, cols, mines)
     engine.solve()
     if engine.game.win or engine.game.game_over:
         engine.save_test_results("Minesweeper_Model/test/test_results_4.txt")
