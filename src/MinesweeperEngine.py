@@ -1,6 +1,6 @@
 from MinesweeperGame import MinesweeperGame
 import random
-
+import os
 class MinesweeperEngine:
     def __init__(self, rows, cols, mine_count):
         self.game = MinesweeperGame(rows, cols, mine_count)
@@ -173,6 +173,9 @@ class MinesweeperEngine:
                 self.game.flag_cell(x, y)
     
     def save_test_results(self, file_path):
+        directory = os.path.dirname(filename)
+        if directory and not os.path.exists(directory):
+            os.makedirs(directory)
         with open(file_path, "w") as file:
             file.write("Minesweeper Engine Test Results\n")
             file.write("===============================\n")
@@ -191,7 +194,12 @@ if __name__ == "__main__":
     rows = int(input("Enter number of rows: "))
     cols = int(input("Enter number of columns: "))
     mines = int(input("Enter number of mines: "))
+    filename = input("Enter filename to save test results: ")
+    directory = "Minesweeper_Model/test"
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    filepath = os.path.join(directory, f"{filename}.txt")
     engine = MinesweeperEngine(rows, cols, mines)
     engine.solve()
     if engine.game.win or engine.game.game_over:
-        engine.save_test_results("Minesweeper_Model/test/test_results_4.txt")
+        engine.save_test_results(filepath)
